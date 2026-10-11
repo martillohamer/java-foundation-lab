@@ -1,0 +1,101 @@
+# =============================================================================
+# DOCKER-COMPOSE - Producción java-foundation-lab
+# Orchestrates the complete RAG application with persistent storage
+# =============================================================================
+# Servicio: manteka-rag-app
+# - Build desde Dockerfile local
+# - Puerto 8080 mapeado al host
+# - Volumen persistente para .swarm/memory.db
+# - Variables de entorno Spring Boot prod
+# =============================================================================
+version: '3.8'
+
+networks:
+  app-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+services:
+
+  # =========================================================================
+  # SERVICIO PRINCIPAL: manteka-rag-app
+  # -------------------------------------------------------------------------
+  # Nombre: manteka-rag-app (identidad operativa del sistema)
+  # Build: Desde Dockerfile de la misma directory
+  # Puertos: 8080:8080 (API REST + UI si está habilitada)
+  # Volúmenes: Persistencia de AgentDB y índices RAG
+  # -------------------------------------------------------------------------
+  manteka-rag-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: manteka-rag-app
+    # image: manteka/rag:latest  # Descomentar para usar imagen existente
+
+    # === PUERTO ===
+    # Mapear puerto del contenedor 8080 al host 8080
+    ports:
+      - "8080:8080"
+
+    # === REDES ===
+    networks:
+      - app-network
+
+    # === VOLÚMES PERSISTENTES ===
+    # - .swarm/: Almacenamiento duradero para AgentDB (.swarm/memory.db)
+    #   y índices semánticos RAG entre reinicios de container
+    # - .m2/: Cache local de Maven para builds más rápidos en reinicios
+    # - logs/: Logs de aplicación (opcional, no persists critical data)
+    volumes:
+      - .swarm:/app/.swarm:cached          # AgentDB persistence (.swarm/memory.db)
+      - maven-repo:/root/.m2:cached         # Dependencias Maven cacheadas
+      - ./logs:/app/logs:delegated          # Logs de aplicación
+
+    # === VARIABLES DE ENTORNO ===
+    # - spring.profiles.active: Perfil Spring Boot (prod, dev, test)
+    # - JAVA_OPTS: Configuraciones JVM adicionales (ya definidas en Dockerfile)
+    # - SPRING_APPLICATION_NAME: Nombre consistente para descubrimiento
+    # - DATASOURCE_*: Configuración de base de datos (si se necesita)
+    environment:
+      - spring.profiles.active=prod
+      - JAVA_OPTS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=0.75"
+      - SPRING_APPLICATION_NAME=manteka-rag-app
+      - SPRAGMA_NAMING_CONVENTION=true  # Convención interna de naming
+
+    # === POLÍTICAS DE REINICIO ===
+    # always: Reinicia siempre que el container se detenga (por crash, etc.)
+    # useful para producción con orchestration (K8s, Docker Swarm)
+    # Pero para docker-compose simple, 'unless-stopped' es más apropiado
+    restart: unless-stopped
+
+    # === RECURSOS (Opcional pero recomendado para producción) ===
+    # limits:
+    #   cpus: '2.0'
+    #   memory: 2g
+    # reservations:
+    #   cpus: '0.5'
+    #   memory: 1g
+
+    # === DEPENDENCIAS (si hay servicios auxiliares) ===
+    # Descomentar y configurar si se necesitan bases de datos externas, etc.
+    # depends_on:
+    #   - postgres-db
+    #   - redis-cache
+
+# ============================================================================
+# VOLÚMEES NOMBRADOS (Named Volumes)
+# ============================================================================
+# Estos se crean automáticamente con `docker compose up`
+# - .swarm: Persistencia local de AgentDB y embeddings RAG
+# - maven-repo: Cache global de dependencias Maven
+# ============================================================================
+volumes:
+  .swarm:
+    driver: local
+    driver_opts:
+      type: none
+      device: "${PWD}/.swarm"
+  maven-repo:
+    driver: local

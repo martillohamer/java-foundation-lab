@@ -14,6 +14,9 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <java.version>17</java.version>
         <spring-boot.version>3.2.2</spring-boot.version>
+        <!-- GraalVM Native Image properties -->
+        <graalvm.version>22.3.0</graalvm.version>
+        <native.plugin.version>0.9.5</native.plugin.version>
     </properties>
 
     <dependencies>
@@ -29,11 +32,48 @@
             <version>${spring-boot.version}</version>
         </dependency>
 
+        <!-- Testcontainers for Docker container management -->
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>testcontainers</artifactId>
+            <version>1.20.0</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>spring-boot</artifactId>
+            <version>1.20.0</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Docker Client for programmatic Docker API access -->
+        <dependency>
+            <groupId>com.github.docker-java</groupId>
+            <artifactId>docker-java-core</artifactId>
+            <version>5.2.0</version>
+            <scope>compile</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.github.docker-java</groupId>
+            <artifactId>docker-java-transport-servlets</artifactId>
+            <version>5.2.0</version>
+            <scope>compile</scope>
+        </dependency>
+
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
             <version>5.10.2</version>
             <scope>test</scope>
+        </dependency>
+
+        <!-- Javaparser para análisis y refactorización AST -->
+        <dependency>
+            <groupId>com.github.javaparser</groupId>
+            <artifactId>javaparser-core</artifactId>
+            <version>3.25.0</version>
         </dependency>
     </dependencies>
 
@@ -47,6 +87,7 @@
                     <source>17</source>
                     <target>17</target>
                     <release>17</release>
+                    <encoding>UTF-8</encoding>
                 </configuration>
             </plugin>
 
@@ -61,6 +102,49 @@
                         </goals>
                     </execution>
                 </executions>
+            </plugin>
+
+            <!-- GraalVM Native Image Plugin -->
+            <plugin>
+                <groupId>org.graalvm.buildtools</groupId>
+                <artifactId>native-maven-plugin</artifactId>
+                <version>${native.plugin.version}</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>native</goal>
+                        </goals>
+                        <configuration>
+                            <excludeSources>
+                                <excludeSource>test</excludeSource>
+                            </excludeSources>
+                            <report>
+                                <include>true</include>
+                            </report>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- Maven JAR Plugin para empaquetado de Agente JVM -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.3.0</version>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <premain-class>com.simdev.java.basic.agent.Agent</premain-class>
+                            <can-redefine-classes>true</can-redefine-classes>
+                            <can-retransform-classes>true</can-retransform-classes>
+                            <attributes>
+                                <title>Java Foundation Lab Instrumentation Agent</title>
+                                <implementation-version>${project.version}</implementation-version>
+                                <can-transform>true</can-transform>
+                            </attributes>
+                        </manifest>
+                    </archive>
+                </configuration>
             </plugin>
         </plugins>
     </build>

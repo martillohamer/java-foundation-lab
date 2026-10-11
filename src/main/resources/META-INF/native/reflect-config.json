@@ -1,0 +1,57 @@
+# Reflection configuration for GraalVM Native Image
+# This file tells the native image builder which classes and members
+# need to be kept at runtime for Spring Boot and related frameworks.
+
+# Spring Boot related classes
+-Class=org.springframework.boot.SpringApplication
+-Class=org.springframework.boot.autoconfigure.SpringBootApplication
+-Class=org.springframework.boot.web.servlet.ServletWebServerFactory
+-Class=org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory
+-Class=org.springframework.boot.web.servlet.error.ErrorController
+
+# WebSocket related
+-Class=org.springframework.web.socket.config.annotation.WebSocketConfigurer
+-Class=org.springframework.web.socket.server.HandshakeHandler
+-Class=org.springframework.web.socket.server.standard.SpringHandshakeHandler
+
+# REST Controllers
+-Class=com.simdev.java.basic.sandbox.SandboxController
+-Class=com.simdev.java.basic.Main
+-Class=com.simdev.java.basic.arena.GamifiedArena
+
+# Linter related
+-Class=com.simdev.java.basic.linter.CleanCodeLinter
+-Class=com.simdev.java.basic.linter.AuditReport
+-Class=com.simdev.java.basic.linter.AuditViolation
+
+# Processor and JSON
+-Processor=org.codehaus.jackson.mapper.ObjectMapper
+-Processor=com.fasterxml.jackson.databind.ObjectMapper
+
+# Keep all Spring beans and configurations
+-Resources=application.properties
+-Resources=META-INF/native/native-image.properties
+
+# Keep enum values
+-Enumerated=* 
+
+# Keep method handles
+-keep-all-methods-with-annotations=*
+
+# Keep all Spring annotations
+-keep-annotations=org.springframework.web.bind.annotation.*,org.springframework.context.annotation.*,org.springframework.boot.context.*
+
+# Dynamically initialize beans
+-DynamicallyInitialize=org.springframework.boot.SpringApplication
+
+# I/O streams and handlers
+-keep-all-io-streams=true
+
+# SSL/TLS related
+-SSLContextProvider=sun.security.ssl.SSLContextImpl$DefaultSSLContextProvider
+
+# Trusted libraries
+-TrustedLibraries=jdk.crypto.provider,SunJSSE
+
+# Class inheritance
+-ClassHierarchy=classlist.txt

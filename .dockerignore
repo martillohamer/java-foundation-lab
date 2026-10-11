@@ -1,0 +1,65 @@
+# =============================================================================
+# .DOCKERIGNORE - Optimización de contexto de compilación Docker
+# Archivo que le dice a Docker qué archivos/ directorios EXCLUIR al construir
+# la imagen. Reduce el tamaño del contexto de envío y acelera los builds.
+# =============================================================================
+# Directorios de construcción y temporales
+target/
+*~
+
+# Directorio .git - Nunca incluír en producción
+.git/
+.gitignore
+.gitattributes
+
+# Archivos de sistema y ocultos
+.DS_Store
+Thumbs.db
+
+# Archivos de logs locales (los logs se redirigirán a stdout/stderr en container)
+*.log
+log/
+
+# Archivos de configuración locale que podrían sobrescribirse
+.settings/
+.classpath
+.project
+
+# Archivos de usuario específicos (nunca subirlos al container)
+.local/
+*.kube
+*.helm
+
+# Archivos de test y cobertura (solo para desarrollo local)
+*Test.java
+*Tests.java
+**/test-results/
+**/surefire-reports/
+
+# Archivos de IDE (son específicos del desarrollador, no del proyecto)
+.idea/
+.vscode/
+*.iws
+*.iml
+
+# Archivos de build temporales generados
+/target/
+/tmp/
+
+# Excepciones importantes: archivos CRÍTICOS que SÍ deben incluírse
+# (aunque parezcan archivos temporales)
+Dockerfile
+docker-compose.yml
+.dockerignore
+README.md
+LICENSE
+pom.xml
+
+# Patrones explícitos: incluir explícitamente si están en subdirectorios
+!src/main/**/*
+!src/test/**/**
+
+# README y documentación - útil para debugging en producción
+README*.md
+docs/**
+LICENSE*
